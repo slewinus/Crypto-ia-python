@@ -13,9 +13,7 @@ res = requests.get(endpoint + '?fsym=BTC&tsym=EUR&limit=500')
 hist = pd.DataFrame(json.loads(res.content)['Data'])
 hist = hist.set_index('time')
 hist.index = pd.to_datetime(hist.index, unit='s')
-# colonne cible
 target_col = 'close'
-# maj API, suppression des 2 colonnes string
 hist = hist.drop(['conversionType','conversionSymbol'], axis=1)
 
 hist.head(5)
@@ -82,7 +80,6 @@ loss = 'mse'
 dropout = 0.2
 optimizer = 'adam'
 
-#Resultat & entrainement Train
 train, test, X_train, X_test, y_train, y_test = prepare_data(
     hist, target_col, window_len=window_len, zero_base=zero_base, test_size=test_size)
 model = build_lstm_model(
@@ -91,12 +88,10 @@ model = build_lstm_model(
 history = model.fit(
     X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=True)
 
-#MAE
 targets = test[target_col][window_len:]
 preds = model.predict(X_test).squeeze()
 mean_absolute_error(preds, y_test)
 
-#resultat
 preds = test[target_col].values[:-window_len] * (preds + 1)
 preds = pd.Series(index=targets.index, data=preds)
 line_plot(targets, preds, 'actual', 'prediction', lw=3)
